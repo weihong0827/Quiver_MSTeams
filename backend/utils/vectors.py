@@ -27,6 +27,21 @@ class Neurons(BaseModel):
         except Exception as e:
             logger.error(f"Error creating vector for document {e}")
 
+    def create_vector_from_text(self, text: str, user_openai_api_key=None):
+        documents_vector_store = get_documents_vector_store()
+        logger.info("Creating vector for text")
+        if user_openai_api_key:
+            documents_vector_store._embedding = OpenAIEmbeddings(
+                openai_api_key=user_openai_api_key
+            )  # pyright: ignore reportPrivateUsage=none
+        try:
+            sids = documents_vector_store.add_texts(text)
+            if sids and len(sids) > 0:
+                return sids
+
+        except Exception as e:
+            logger.error(f"Error creating vector for document {e}")
+
     def create_embedding(self, content):
         embeddings = get_embeddings()
         return embeddings.embed_query(content)

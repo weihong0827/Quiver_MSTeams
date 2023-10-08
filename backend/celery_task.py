@@ -19,3 +19,13 @@ def create_embedding_for_document(
 
     brain = Brain(id=brain_id)  # pyright: ignore
     brain.create_brain_vector(created_vector_id, file_sha1)
+
+
+@shared_task
+def create_embedding_for_ans_text(brain_id, text, user_openai_api_key):
+    nuerons = Neurons()
+    created_vector = nuerons.create_vector_from_text(text, user_openai_api_key)
+    created_vector_id = created_vector[0]  # pyright: ignore reportPrivateUsage=none
+    brain = Brain(id=brain_id)  # pyright: ignore
+    brain.create_brain_vector(created_vector_id, "")
+    return created_vector_id
