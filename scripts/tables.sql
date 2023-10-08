@@ -186,6 +186,24 @@ CREATE TABLE IF NOT EXISTS brains_vectors (
   FOREIGN KEY (brain_id) REFERENCES brains (brain_id)
 );
 
+CREATE TABLE IF NOT EXISTS chats_teams_conversation (
+  chat_id uuid,
+  conversation_id VARCHAR(255) unique,
+  brain_id uuid,
+  creation_time timestamp default current_timestamp,
+  foreign key (brain_id) references brains (brain_id),
+  foreign key (chat_id) references chats (chat_id),
+  PRIMARY KEY (chat_id,conversation_id,brain_id)
+);
+
+CREATE TABLE IF NOT EXISTS brain_teams (
+  brain_id uuid,
+  channel_id VARCHAR(255),
+  creation_time timestamp default current_timestamp,
+  foreign key (brain_id) references brains (brain_id),
+  PRIMARY KEY (brain_id, channel_id)
+);
+
 -- Create brains X vectors table
 CREATE TABLE IF NOT EXISTS brain_subscription_invitations (
   brain_id UUID,

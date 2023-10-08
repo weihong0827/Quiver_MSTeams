@@ -27,6 +27,11 @@ from repository.chat import (
     get_chat_by_id,
     get_user_chats,
     update_chat,
+    ChatConvResponse,
+    get_chat_by_conversation,
+    NO_CHAT_FOUND_ERROR,
+    CreateChatWithConvoProperties,
+    create_chat_by_conversation,
 )
 from repository.chat.get_chat_history_with_notifications import (
     ChatItem,
@@ -125,6 +130,45 @@ async def delete_chat(chat_id: UUID):
 
     delete_chat_from_db(supabase_db=supabase_db, chat_id=chat_id)
     return {"message": f"{chat_id}  has been deleted."}
+
+
+@chat_router.post(
+    "/chat/conversation", dependencies=[Depends(AuthBearer())], tags=["Chat"]
+)
+async def create_chat_conversation_handler(
+    chat_data: CreateChatWithConvoProperties,
+    current_user: UserIdentity = Depends(get_current_user),
+) -> ChatConvResponse:
+    """
+    Create a new chat using teams conversation id with initial chat messages.
+    """
+    return create_chat_by_conversation(user_id=current_user.id, chat_data=chat_data)
+
+
+@chat_router.get(
+    "/chat/conversation/{conversation_id}",
+    dependencies=[Depends(AuthBearer())],
+    tags=["Chat"],
+    responses={
+        404: {
+            "description": "Chat not found",
+            "content": {
+                "application/json": {"example": {"detail": NO_CHAT_FOUND_ERROR}}
+            },
+        }
+    },
+)
+async def get_chat_by_conversation_id(conversation_id: str) -> ChatConvResponse:
+    """
+    Get chat by conversation id
+    """
+    try:
+        chat_conv = get_chat_by_conversation(conversation_id)
+        return chat_conv
+    except Exception as e:
+        # object not found error
+        print(e)
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 # update existing chat metadata

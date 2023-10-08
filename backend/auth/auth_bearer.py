@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from uuid import UUID
 
 from auth.api_key_handler import get_user_from_api_key, verify_api_key
 from auth.jwt_token_handler import decode_access_token, verify_token
@@ -52,7 +53,9 @@ class AuthBearer(HTTPBearer):
 
     def get_test_user(self) -> UserIdentity:
         return UserIdentity(
-            email="test@example.com", id="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"  # type: ignore
+            email="test@example.com",
+            id=UUID("10008fee-7ef4-4d25-8ad6-d10e2e39a0d4")
+            # type: ignore
         )  # replace with test user information
 
 

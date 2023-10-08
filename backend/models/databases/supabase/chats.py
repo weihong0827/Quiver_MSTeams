@@ -13,6 +13,12 @@ class CreateChatHistory(BaseModel):
     brain_id: Optional[UUID]
 
 
+class CreateChatWithConvoProperties(BaseModel):
+    name: str
+    conversation_id: str
+    brain_id: UUID
+
+
 class Chats(Repository):
     def __init__(self, supabase_client):
         self.db = supabase_client
@@ -103,3 +109,32 @@ class Chats(Repository):
 
     def delete_chat_history(self, chat_id):
         self.db.table("chat_history").delete().match({"chat_id": chat_id}).execute()
+
+    def get_chat_by_conversation(self, conversation_id: str):
+        response = (
+            self.db.from_("chats_teams_conversation")
+            .select("*")
+            .filter("conversation_id", "eq", conversation_id)
+            .execute()
+        )
+        return response
+
+    def create_chat_by_conversation(self, user_id, chat_data):
+        # Insert a new row into the chats table
+        new_chat = {
+            "user_id": str(user_id),
+            "chat_name": chat_data.name,
+        }
+        insert_response = self.db.table("chats").insert(new_chat).execute()
+
+        conversation_link = {
+            "brain_id": str(chat_data.brain_id),
+            "conversation_id": chat_data.conversation_id,
+            "chat_id": insert_response.data[0]["chat_id"],
+        }
+        insert_response = (
+            self.db.table("chats_teams_conversation")
+            .insert(conversation_link)
+            .execute()
+        )
+        return insert_response

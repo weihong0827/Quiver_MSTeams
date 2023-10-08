@@ -62,6 +62,7 @@ class Brain(Repository):
             .filter("user_id", "eq", user_id)
             .execute()
         )
+        print(response)
         user_brains: list[MinimalBrainEntity] = []
         for item in response.data:
             user_brains.append(
@@ -326,3 +327,20 @@ class Brain(Repository):
         if len(response) == 0:
             raise ValueError(f"Brain with id {brain_id} does not exist.")
         return response[0]["count"]
+
+    def create_channel_brain(self, brain_id: UUID, channel_id: str):
+        response = (
+            self.db.from_("brain_teams")
+            .insert({"brain_id": str(brain_id), "channel_id": channel_id})
+            .execute()
+        )
+        return response.data
+
+    def get_channel_brain(self, channel_id):
+        response = (
+            self.db.table("brain_teams")
+            .select("channel_id:channel_id,brains(id:brain_id,name)")
+            .filter("channel_id", "eq", channel_id)
+            .execute()
+        )
+        return response.data

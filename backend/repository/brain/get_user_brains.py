@@ -7,5 +7,6 @@ from models.brain_entity import MinimalBrainEntity
 def get_user_brains(user_id: UUID) -> list[MinimalBrainEntity]:
     supabase_db = get_supabase_db()
     results = supabase_db.get_user_brains(user_id)  # type: ignore
+    print("RESULT:", results)
 
     return results  # type: ignore
