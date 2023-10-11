@@ -1,6 +1,6 @@
 from uuid import UUID
 from repository.chat.get_chat_by_conversation import ChatConvResponse
-from models.databases.supabase.chats import CreateChatWithConvoProperties
+from models.chats import CreateChatWithConvoProperties
 from models import get_supabase_db
 
 

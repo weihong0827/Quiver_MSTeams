@@ -6,7 +6,6 @@ from .get_chat_by_conversation import (
 
 from .create_chat import CreateChatProperties, create_chat
 from .create_chat_by_conversation import (
-    CreateChatWithConvoProperties,
     create_chat_by_conversation,
 )
 from .format_chat_history import format_chat_history, format_history_to_openai_mesages

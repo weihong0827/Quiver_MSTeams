@@ -13,6 +13,7 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
 )
+from celery_task import create_embedding_for_ans_text
 from llm.utils.get_prompt_to_use import get_prompt_to_use
 from llm.utils.get_prompt_to_use_id import get_prompt_to_use_id
 from logger import get_logger
@@ -31,6 +32,8 @@ from vectorstore.supabase import CustomSupabaseVectorStore
 
 from .base import BaseBrainPicking
 from .prompts.CONDENSE_PROMPT import CONDENSE_QUESTION_PROMPT
+from .prompts.SUMMARIZE_PROMPT import SUMMARIZE_PROMPT
+
 
 logger = get_logger(__name__)
 QUIVR_DEFAULT_PROMPT = "Your name is Quivr. You're a helpful assistant.  If you don't know the answer, just say that you don't know, don't try to make up an answer."
@@ -134,6 +137,20 @@ class QABaseBrainPicking(BaseBrainPicking):
         ]
         CHAT_PROMPT = ChatPromptTemplate.from_messages(messages)
         return CHAT_PROMPT
+
+    def summarize_history(self, accepted_ans):
+        transformed_history = format_chat_history(get_chat_history(self.chat_id))
+        answering_llm = self._create_llm(
+            model=self.model, streaming=False, callbacks=self.callbacks
+        )
+        summarizer = LLMChain(llm=answering_llm, prompt=SUMMARIZE_PROMPT)
+        summarizer_response = summarizer(
+            {"chat_history": transformed_history, "response": accepted_ans}
+        )
+        create_embedding_for_ans_text(
+            self.brain_id, summarizer_response, self.openai_api_key
+        )
+        return summarizer_response
 
     def generate_answer(
         self, chat_id: UUID, question: ChatQuestion

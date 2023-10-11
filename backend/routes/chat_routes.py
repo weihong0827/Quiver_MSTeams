@@ -6,6 +6,7 @@ from venv import logger
 from auth import AuthBearer, get_current_user
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
+from llm.base import BaseBrainPicking
 from llm.openai import OpenAIBrainPicking
 from llm.qa_headless import HeadlessQA
 from models import (
@@ -17,6 +18,8 @@ from models import (
     UserUsage,
     get_supabase_db,
 )
+from models.chats import CreateChatWithConvoProperties
+
 from models.databases.supabase.supabase import SupabaseDB
 from repository.brain import get_brain_details
 from repository.chat import (
@@ -30,7 +33,6 @@ from repository.chat import (
     ChatConvResponse,
     get_chat_by_conversation,
     NO_CHAT_FOUND_ERROR,
-    CreateChatWithConvoProperties,
     create_chat_by_conversation,
 )
 from repository.chat.get_chat_history_with_notifications import (
@@ -206,6 +208,32 @@ async def create_chat_handler(
     return create_chat(user_id=current_user.id, chat_data=chat_data)
 
 
+@chat_router.post(
+    "/chat/summarize", dependencies=[Depends(AuthBearer())], tags=["Chat"]
+)
+async def summarize_chat_handler(
+    accepted_ans,
+    chat_id: UUID,
+    brain_id: NullableUUID
+    | UUID
+    | None = Query(..., description="The ID of the brain"),
+):
+    # Update if more customization is needed
+    try:
+        summarizer = OpenAIBrainPicking(
+            chat_id=str(chat_id),
+            model="gpt-3.5-turbo",  # type: ignore
+            max_tokens=256,
+            temperature=1,
+            brain_id=str(brain_id),
+            user_openai_api_key="",
+            prompt_id=None,
+        )
+        return summarizer.summarize_history(accepted_ans)
+    except HTTPException as e:
+        raise e
+
+
 # add new question to chat
 @chat_router.post(
     "/chat/{chat_id}/question",
@@ -228,12 +256,6 @@ async def create_question_handler(
     """
     Add a new question to the chat.
     """
-    if brain_id:
-        validate_brain_authorization(
-            brain_id=brain_id,
-            user_id=current_user.id,
-            required_roles=[RoleEnum.Viewer, RoleEnum.Editor, RoleEnum.Owner],
-        )
 
     # Retrieve user's OpenAI API key
     if brain_id:

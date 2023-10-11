@@ -23,3 +23,9 @@ class ChatQuestion(BaseModel):
     max_tokens: Optional[int]
     brain_id: Optional[UUID]
     prompt_id: Optional[UUID]
+
+
+class CreateChatWithConvoProperties(BaseModel):
+    name: str
+    conversation_id: str
+    brain_id: UUID

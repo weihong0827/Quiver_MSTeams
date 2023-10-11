@@ -3,6 +3,7 @@ from uuid import UUID
 
 from models.databases.repository import Repository
 from pydantic import BaseModel
+from models.chats import CreateChatWithConvoProperties
 
 
 class CreateChatHistory(BaseModel):
@@ -11,12 +12,6 @@ class CreateChatHistory(BaseModel):
     assistant: str
     prompt_id: Optional[UUID]
     brain_id: Optional[UUID]
-
-
-class CreateChatWithConvoProperties(BaseModel):
-    name: str
-    conversation_id: str
-    brain_id: UUID
 
 
 class Chats(Repository):
@@ -119,7 +114,9 @@ class Chats(Repository):
         )
         return response
 
-    def create_chat_by_conversation(self, user_id, chat_data):
+    def create_chat_by_conversation(
+        self, user_id, chat_data: CreateChatWithConvoProperties
+    ):
         # Insert a new row into the chats table
         new_chat = {
             "user_id": str(user_id),
